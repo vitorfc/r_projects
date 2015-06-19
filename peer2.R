@@ -68,11 +68,17 @@ levels(data$STATE)
 
 # [===========================================================================================]
 #cleaning
-# select just the needed columns
-sel.data <- select(data, STATE, EVTYPE_OK, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP,BGN_DATE)
 
-# year OK
+# select just the needed columns
+sel.data <- select(data, STATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP,BGN_DATE)
+
+
+
+# converting the column year 
 sel.data<-mutate(sel.data, Year=as.numeric(format(strptime(BGN_DATE, "%m/%d/%Y %H:%M:%S"),"%Y")))
+
+# creating the column EVTYPE and converting lower case
+sel.data$EVTYPE_OK <- tolower(data$EVTYPE) # lower case
 
 # define a function to clean up ev type
 cleanup_EVTYPE_OK <- function(x)
@@ -90,11 +96,10 @@ cleanup_EVTYPE_OK <- function(x)
 }
 
 # create a vector of the cleaned up data and set as factor
-EVTYPE_OKCLEAN <- as.factor(sapply(data$EVTYPE, cleanup_EVTYPE_OK))
+sel.data$EVTYPE_OK <- as.factor(sapply(data$EVTYPE, cleanup_EVTYPE_OK))
 
 
 # cleaning the Type
-sel.data$EVTYPE_OK <- tolower(sel.data$EVTYPE) # lower case
 
 sel.data$EVTYPE_OK <- gsub("avalance", "avalanche", sel.data$EVTYPE_OK)
 sel.data$EVTYPE_OK <- gsub("mudslides", "mud slides", sel.data$EVTYPE_OK)
@@ -161,12 +166,11 @@ sel.data$EVTYPE_OK[hail] <- "hail"
 sel.data$EVTYPE_OK<-as.factor(toupper(sel.data$EVTYPE_OK))
 # analysis
 
-plot(table(data$Year))
+plot(table(sel.data$Year))
 
-plot(table(data$Year), type="l", xlab="Year",ylab="Yearly Events")
+plot(table(sel.data$Year), type="l", xlab="Year",ylab="Yearly Events")
 
-
-barplot(table(data$STATE))
+barplot(table(sel.data$STATE))
 
 barplot(table(sel.data$EVTYPE_OK))
 
@@ -185,7 +189,6 @@ health_ten <- arrange_health[1:10,]
 health_harm <- reorder(health_ten$EVTYPE_OK, -health_ten$TOTAL)
 
 arrange_health[1:10,]
-
 
 qplot(health_harm, health_ten$TOTAL, data = health_ten, 
       stat="identity", geom = "bar", fill=EVTYPE_OK) +
